@@ -5,10 +5,15 @@ from fastapi import APIRouter, UploadFile, File
 from paddleocr import PaddleOCR
 from translate.custom_translation_hugging import translate
 
-ocr = PaddleOCR(lang="ta",
-    text_detection_model_name="PP-OCRv5_mobile_det", text_recognition_model_name="ta_PP-OCRv5_mobile_rec",
-    use_doc_orientation_classify=False, use_doc_unwarping=False,use_textline_orientation=False,)
-
+ocr = PaddleOCR(
+    lang="ta",
+    text_detection_model_name="PP-OCRv5_mobile_det",
+    text_recognition_model_name="ta_PP-OCRv5_mobile_rec",
+    enable_mkldnn=False,
+    use_doc_orientation_classify=False,
+    use_doc_unwarping=False,
+    use_textline_orientation=False,
+)
 doc_path = "files/story.png"
 
 router = APIRouter()
