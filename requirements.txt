@@ -1,0 +1,11 @@
+pandas
+paddleocr
+paddlepaddle
+IndicTransToolkit
+transformers==4.37.2
+sentencepiece
+sacremoses
+torch
+pillow
+numpy
+certifi
