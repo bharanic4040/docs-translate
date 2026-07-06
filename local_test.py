@@ -15,18 +15,25 @@ ocr = PaddleOCR(
 
 def main():
     result = ocr.predict(doc_path)
-    full_text = ""
-    input_translated_list = []
     for page in result:
         texts = page['rec_texts']
-        for text in texts:
-            full_text += text + "\n"
-        input_translated_list.append(full_text)
-    print(full_text)
+        max_chars = 128
+        chunks = []
+        current = ""
+        for line in texts:
+            if len(current) + len(line) > max_chars:
+                chunks.append(current)
+                current = line
+            else:
+                current += "\n" + line
+        if current:
+            chunks.append(current)
+        translated = translate(
+            chunks, src_lang="tam_Taml", target_lang="tel_Telu"
+        )
+        final_translation = "\n".join(translated)
+        print(final_translation)
     # tel_Telu, tam_Taml, hin_Deva, kan_Knda, mal_Mlym
-    output_target = translate(input_translated_list, src_lang="tam_Taml", target_lang="tel_Telu")
-    for s in output_target:
-        print(s)
 
 
 if __name__ == "__main__":

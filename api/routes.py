@@ -1,6 +1,7 @@
+import tempfile
 import time
 
-from fastapi import APIRouter
+from fastapi import APIRouter, UploadFile, File
 from paddleocr import PaddleOCR
 from translate.custom_translation_hugging import translate
 
@@ -12,25 +13,40 @@ doc_path = "files/story.png"
 
 router = APIRouter()
 
-@router.get("/translate")
-async def translate_document():
+@router.post("/translate")
+async def translate_document(file: UploadFile = File(...)):
     try:
         start_time = time.time()
-        result = ocr.predict(doc_path)
-        full_text = ""
-        input_translated_list = []
+        image_path = ""
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp:
+            temp.write(await file.read())
+            image_path = temp.name
+        result = ocr.predict(image_path)
+        all_page_translations = []
         for page in result:
             texts = page['rec_texts']
-            for text in texts:
-                full_text += text + "\n"
-            input_translated_list.append(full_text)
-        # tel_Telu, tam_Taml, hin_Deva
-        output_target = translate(input_translated_list, src_lang="tam_Taml", target_lang="tel_Telu")
+            max_chars = 128
+            chunks = []
+            current = ""
+            for line in texts:
+                if len(current) + len(line) > max_chars:
+                    chunks.append(current)
+                    current = line
+                else:
+                    current += "\n" + line
+            if current:
+                chunks.append(current)
+            translated = translate(
+                chunks, src_lang="tam_Taml", target_lang="tel_Telu"
+            )
+            final_translation = ".".join(translated)
+            #TODO - IMP - need to strip backward slashes and double quotes
+            all_page_translations.append(final_translation)
         print("Total time in secs: ", time.time() - start_time)
     except Exception as e:
         return {"Error": str(e)}
 
-    return { "translation": output_target }
+    return { "translation":  all_page_translations }
 
 @router.get("/health")
 def health():

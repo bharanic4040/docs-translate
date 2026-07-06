@@ -52,35 +52,7 @@ def translate(sentences: List[str], src_lang: str, target_lang: str):
     inputs = {k: v.to(DEVICE) for k, v in inputs.items()}
     with torch.inference_mode():
         outputs = model.generate( **inputs,
-            num_beams=1,  do_sample=False, max_new_tokens=48,)
+            num_beams=1,  do_sample=False, max_new_tokens=256,)
         decoded = tokenizer.batch_decode(outputs, skip_special_tokens=True)
 
     return ip.postprocess_batch(decoded, lang=target_lang)
-
-# TODO not working properly because 1 can be a survey number or an extent ,
-# issue is not with the regexp, it is with how we identify extent vs survey number
-def extract_survey_numbers(text: str) -> List[str]:
-    # normalize OCR noise
-    text = text.replace("／", "/")
-    text = re.sub(r"\s+", " ", text)
-    # survey number regex (ONLY valid patterns)
-    pattern = r"\b\d+(?:/\d+[A-Z]?)?\b"
-
-    candidates = re.findall(pattern, text)
-
-    # filter out decimals split cases like "9" and "99"
-    # (remove numbers that were originally part of decimals)
-    cleaned = []
-
-    for i, val in enumerate(candidates):
-        # skip single digits that are surrounded by decimal-like context
-        if re.fullmatch(r"\d", val):
-            continue
-        cleaned.append(val)
-    print(cleaned)
-    return cleaned
-
-
-if __name__ == "__main__":
-    text = "సర్వే నెం.22/12A 9.99 రు 132/12 gjgkgk 1.2 పూరా నంజ  సెం.లు"
-    extract_survey_numbers(text)
