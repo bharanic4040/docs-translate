@@ -9,3 +9,6 @@ torch
 pillow
 numpy
 certifi
+fastapi
+uvicorn[standard]
+python-multipart
